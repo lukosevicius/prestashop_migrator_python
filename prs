@@ -53,6 +53,7 @@ def prepareZip(projectName):
 
 def copyProject(projectPath):
 
+    print("Copying project...")
     projectName = getProjectNameFromPath(projectPath)
 
     count = 0
@@ -63,11 +64,7 @@ def copyProject(projectPath):
             break
 
     shutil.copytree(projectPath, newDirPath)
-
-    print(newDirPath)
-        
-
-    # shutil.cop
+    print(f"Copied to '{newDirPath}'")
     
 def getProjectNameFromPath(projectPath):
     nameRegex = re.compile('\w+$')
@@ -88,7 +85,7 @@ def getProjectPath(projectName):
             projectPath = projectName
     else:
         projectPath = SERVER + '/' + projectName
-        if not os.path.isdir(projectName):
+        if not os.path.isdir(projectPath):
             print("No such project")
             quit()
 
@@ -104,6 +101,5 @@ def askOption():
             optionChosen = True
 
     return command
-
 
 start()
