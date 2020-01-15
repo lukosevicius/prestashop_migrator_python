@@ -1,7 +1,7 @@
 #! /usr/bin/python3.7
-import sys, os, shutil, re
+import sys, os, shutil, re, send2trash
 
-COMMANDS = ['zip', 'export']
+COMMANDS = ['zip', 'export', 'clean']
 SERVER = '/home/mantas/Server'
 
 def start():
@@ -23,7 +23,24 @@ def start():
         prepareZip(projectName) 
     elif command == "export":
         prepareZip(projectName) 
+    elif command == "clean":
+        clean() 
 
+def clean():
+
+    print("Cleaning old copied files from Server...")
+    deleteCount = 0
+    deleteList = []
+
+    for dir in os.listdir(SERVER):
+        if '-prcopy' in dir:
+            deleteList.append(dir)
+            deleteCount += 1
+            # print(SERVER+'/'+dir)
+            send2trash.send2trash(SERVER+'/'+dir)
+
+    print("Deleted directories: " + str(deleteList))
+    print("Total: " + str(deleteCount) + " directories")
 
 def prepareZip(projectName):
 
@@ -33,7 +50,6 @@ def prepareZip(projectName):
     print ("Project path: " + projectPath)
 
     copyProject(projectPath)
-
 
 def copyProject(projectPath):
 
@@ -58,7 +74,6 @@ def getProjectNameFromPath(projectPath):
     mo = nameRegex.search(projectPath)
     return mo.group()
 
-
 def getProjectPath(projectName):
     # Ask for project name if not entered
     if not projectName:
@@ -80,15 +95,15 @@ def getProjectPath(projectName):
     return projectPath
 
 def askOption():
-        optionChosen = False;
+    optionChosen = False;
 
-        while not optionChosen:
-            print("Options: " + str(COMMANDS))
-            command = input("Enter option:\n")
-            if command in COMMANDS:
-                optionChosen = True
+    while not optionChosen:
+        print("Options: " + str(COMMANDS))
+        command = input("Enter option:\n")
+        if command in COMMANDS:
+            optionChosen = True
 
-        return command
+    return command
 
 
 start()
