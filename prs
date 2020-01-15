@@ -1,0 +1,69 @@
+#! /usr/bin/python3.7
+import sys, os
+
+COMMANDS = ['zip', 'export']
+SERVER = '/home/mantas/Server'
+
+def start():
+
+    # Check if command is given with arguments, if not - ask to write it
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        command = askOption()
+    else:
+        command = sys.argv[1]
+
+    # Check if project name is given with arguments
+    if len(sys.argv) > 2:
+        projectName = sys.argv[2]
+    else:
+        projectName = False
+
+    
+    if command == "zip":
+        prepareZip(projectName) 
+    elif command == "export":
+        prepareZip(projectName) 
+
+
+def prepareZip(projectName):
+
+    projectPath = getProjectPath(projectName)
+
+    print ("Starting export...")
+    print ("Project path: " + projectPath)
+
+
+    
+def getProjectPath(projectName):
+    # Ask for project name if not entered
+    if not projectName:
+        projectName = input("Enter project name: \n")
+
+    # Check if folder with such name exists
+    if os.path.isabs(projectName):
+        if not os.path.isdir(projectName):
+            print("No such project")
+            quit()
+        else: 
+            projectPath = projectName
+    else:
+        projectPath = SERVER + '/' + projectName
+        if not os.path.isdir(projectName):
+            print("No such project")
+            quit()
+
+    return projectPath
+
+def askOption():
+        optionChosen = False;
+
+        while not optionChosen:
+            print("Options: " + str(COMMANDS))
+            command = input("Enter option:\n")
+            if command in COMMANDS:
+                optionChosen = True
+
+        return command
+
+
+start()
