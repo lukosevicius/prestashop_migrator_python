@@ -1,5 +1,5 @@
 #! /usr/bin/python3.7
-import sys, os
+import sys, os, shutil, re
 
 COMMANDS = ['zip', 'export']
 SERVER = '/home/mantas/Server'
@@ -32,8 +32,33 @@ def prepareZip(projectName):
     print ("Starting export...")
     print ("Project path: " + projectPath)
 
+    copyProject(projectPath)
 
+
+def copyProject(projectPath):
+
+    projectName = getProjectNameFromPath(projectPath)
+
+    count = 0
+    while True:
+        count += 1
+        newDirPath = projectPath + '-prcopy' + str(count)
+        if not os.path.isdir(newDirPath):
+            break
+
+    shutil.copytree(projectPath, newDirPath)
+
+    print(newDirPath)
+        
+
+    # shutil.cop
     
+def getProjectNameFromPath(projectPath):
+    nameRegex = re.compile('\w+$')
+    mo = nameRegex.search(projectPath)
+    return mo.group()
+
+
 def getProjectPath(projectName):
     # Ask for project name if not entered
     if not projectName:
