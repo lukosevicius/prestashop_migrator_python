@@ -1,8 +1,16 @@
 #! /usr/bin/python3.7
-import sys, os, shutil, re, send2trash
+import sys
+import os
+import shutil
+import re
+import send2trash
+import mysql.connector
+import subprocess
 
 COMMANDS = ['zip', 'export', 'clean']
 SERVER = '/home/mantas/Server'
+MYSQL_CONFIG='/usr/local/bin/prs_script/mysql_config'
+
 
 def start():
 
@@ -18,13 +26,13 @@ def start():
     else:
         projectName = False
 
-    
     if command == "zip":
-        prepareZip(projectName) 
+        prepareZip(projectName)
     elif command == "export":
-        prepareZip(projectName) 
+        prepareZip(projectName)
     elif command == "clean":
-        clean() 
+        clean()
+
 
 def clean():
 
@@ -42,14 +50,26 @@ def clean():
     print("Deleted directories: " + str(deleteList))
     print("Total: " + str(deleteCount) + " directories")
 
+
 def prepareZip(projectName):
 
     projectPath = getProjectPath(projectName)
 
-    print ("Starting export...")
-    print ("Project path: " + projectPath)
+    print("Starting export...")
+    print("Project path: " + projectPath)
 
     copyProject(projectPath)
+    exportDB(projectPath)
+
+
+def exportDB(projectPath):
+    print("Exporting database...")
+
+    dumpFile = open('sqldump.sql', 'w')
+    subprocess.call(['sudo', 'mysqldump', f'--defaults-extra-file={MYSQL_CONFIG}', 'presta'], stdout=dumpFile)
+    dumpFile.close()
+
+    print(f"Exported to '{dumpFile}'")
 
 def copyProject(projectPath):
 
@@ -65,11 +85,13 @@ def copyProject(projectPath):
 
     shutil.copytree(projectPath, newDirPath)
     print(f"Copied to '{newDirPath}'")
-    
+
+
 def getProjectNameFromPath(projectPath):
     nameRegex = re.compile('\w+$')
     mo = nameRegex.search(projectPath)
     return mo.group()
+
 
 def getProjectPath(projectName):
     # Ask for project name if not entered
@@ -81,7 +103,7 @@ def getProjectPath(projectName):
         if not os.path.isdir(projectName):
             print("No such project")
             quit()
-        else: 
+        else:
             projectPath = projectName
     else:
         projectPath = SERVER + '/' + projectName
@@ -91,8 +113,9 @@ def getProjectPath(projectName):
 
     return projectPath
 
+
 def askOption():
-    optionChosen = False;
+    optionChosen = False
 
     while not optionChosen:
         print("Options: " + str(COMMANDS))
@@ -101,5 +124,6 @@ def askOption():
             optionChosen = True
 
     return command
+
 
 start()
