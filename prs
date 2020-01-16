@@ -3,13 +3,14 @@ import sys
 import os
 import shutil
 import re
-import send2trash
-import mysql.connector
+# import send2trash
+# import mysql.connector
 import subprocess
+import re
 
-COMMANDS = ['zip', 'export', 'clean']
+COMMANDS = ['zip', 'export', 'db', 'clean']
 SERVER = '/home/mantas/Server'
-MYSQL_CONFIG='/usr/local/bin/prs_script/mysql_config'
+MYSQL_CONFIG = '/usr/local/bin/prs_script/mysql_config'
 
 
 def start():
@@ -32,6 +33,8 @@ def start():
         prepareZip(projectName)
     elif command == "clean":
         clean()
+    elif command == "db":
+        exportDB(False, False, sys.argv[2])
 
 
 def clean():
@@ -45,7 +48,7 @@ def clean():
             deleteList.append(dir)
             deleteCount += 1
             # print(SERVER+'/'+dir)
-            send2trash.send2trash(SERVER+'/'+dir)
+            # send2trash.send2trash(SERVER+'/'+dir)
 
     print("Deleted directories: " + str(deleteList))
     print("Total: " + str(deleteCount) + " directories")
@@ -58,18 +61,49 @@ def prepareZip(projectName):
     print("Starting export...")
     print("Project path: " + projectPath)
 
-    copyProject(projectPath)
-    exportDB(projectPath)
+    newDirPath = copyProject(projectPath)
+    exportDB(projectPath, newDirPath)
 
 
-def exportDB(projectPath):
-    print("Exporting database...")
+def exportDB(projectPath = False, newDirPath = False, dbName = False):
 
-    dumpFile = open('sqldump.sql', 'w')
-    subprocess.call(['sudo', 'mysqldump', f'--defaults-extra-file={MYSQL_CONFIG}', 'presta'], stdout=dumpFile)
+    if projectPath:
+        print("Getting database name...")
+
+        dbFile = newDirPath+'/db_export.sql'
+
+        # Reading 'parameters.php' file
+        textfile = open(projectPath+'/app/config/parameters.php', 'r')
+        content = textfile.read()
+        textfile.close()
+
+        # Searching for database name in 'parameters.php' file
+        dbRegex = re.compile('\'database_name\'\s=>\s\'(\w*)\'')
+        dbName = dbRegex.search(content).group(1)
+        print(dbName)
+
+        print("Exporting database...")
+
+        # Delete old 'db_export.sql' id exists
+        if(os.path.isfile(dbFile)):
+            print("deleting old 'db_export.sql' file")
+            os.remove(dbFile)
+            print("deleted")
+    else:
+        dbFile ='db_export.sql'
+
+
+    # Create empty file called 'db_export.sql'
+    subprocess.Popen(['touch', 'db_export.sql'])
+
+    # Dump database to 'db_export.sql'
+    dumpFile = open(dbFile, 'w')
+    subprocess.call(
+        ['mysqldump', f'--defaults-extra-file={MYSQL_CONFIG}', f'{dbName}'], stdout=dumpFile)
     dumpFile.close()
 
-    print(f"Exported to '{dumpFile}'")
+    print(f"Exported database to {dbFile}")
+
 
 def copyProject(projectPath):
 
@@ -84,7 +118,9 @@ def copyProject(projectPath):
             break
 
     shutil.copytree(projectPath, newDirPath)
-    print(f"Copied to '{newDirPath}'")
+    print(f"Copied to {newDirPath}")
+
+    return newDirPath
 
 
 def getProjectNameFromPath(projectPath):
