@@ -3,7 +3,7 @@ import sys
 import os
 import shutil
 import re
-# import send2trash
+import send2trash
 # import mysql.connector
 import subprocess
 import re
@@ -47,8 +47,7 @@ def clean():
         if '-prcopy' in dir:
             deleteList.append(dir)
             deleteCount += 1
-            # print(SERVER+'/'+dir)
-            # send2trash.send2trash(SERVER+'/'+dir)
+            send2trash.send2trash(SERVER+'/'+dir)
 
     print("Deleted directories: " + str(deleteList))
     print("Total: " + str(deleteCount) + " directories")
@@ -63,9 +62,27 @@ def prepareZip(projectName):
 
     newDirPath = copyProject(projectPath)
     exportDB(projectPath, newDirPath)
+    removeGit(newDirPath)
+    changeOccurances(newDirPath)
+
+def changeOccurances(newDirPath):
+    
+
+def removeGit(newDirPath):
+
+    gitPath = newDirPath + '/.git'
+
+    if os.path.isdir(gitPath):
+        print('Removing \'.git\' folder')
+        shutil.rmtree(gitPath)
+        ok()
+    else:
+        print('No \'.git\' folder found')
 
 
-def exportDB(projectPath = False, newDirPath = False, dbName = False):
+def exportDB(projectPath=False, newDirPath=False, dbName=False):
+
+    print("Preparing to export database...")
 
     if projectPath:
         print("Getting database name...")
@@ -81,17 +98,18 @@ def exportDB(projectPath = False, newDirPath = False, dbName = False):
         dbRegex = re.compile('\'database_name\'\s=>\s\'(\w*)\'')
         dbName = dbRegex.search(content).group(1)
         print(dbName)
-
-        print("Exporting database...")
+        ok()
 
         # Delete old 'db_export.sql' id exists
         if(os.path.isfile(dbFile)):
             print("deleting old 'db_export.sql' file")
             os.remove(dbFile)
             print("deleted")
+            ok()
     else:
-        dbFile ='db_export.sql'
+        dbFile = 'db_export.sql'
 
+    print("Exporting database...")
 
     # Create empty file called 'db_export.sql'
     subprocess.Popen(['touch', 'db_export.sql'])
@@ -103,6 +121,7 @@ def exportDB(projectPath = False, newDirPath = False, dbName = False):
     dumpFile.close()
 
     print(f"Exported database to {dbFile}")
+    ok()
 
 
 def copyProject(projectPath):
@@ -119,6 +138,7 @@ def copyProject(projectPath):
 
     shutil.copytree(projectPath, newDirPath)
     print(f"Copied to {newDirPath}")
+    ok()
 
     return newDirPath
 
@@ -160,6 +180,10 @@ def askOption():
             optionChosen = True
 
     return command
+
+
+def ok():
+    print("\033[92mSuccess\033[0m")
 
 
 start()
